@@ -11,7 +11,6 @@ hexa:
 	hex_end:
 	
 init:
-	KDebug.WriteLine "Hello!"
 	move.w	#$8000+%00000100,(VDPCTRL)		;	MODE REGISTER 1
 	move.w	#$8100+%01110100,(VDPCTRL)      ;	MODE REGISTER 2
 	move.w	#$8200+(PLANE_A>>10),(VDPCTRL)  ;	PLANE A LOCATION
@@ -52,7 +51,6 @@ init:
 	
 	InitTXT	ASCIITXT1,ASCIITXT1_END,1,1
 	InitTXT	ASCIITXT3,ASCIITXT3_END,1,3
-	InitTXT	ASCIITXT4,ASCIITXT4_END,1,4
 	InitTXT	ASCIITXT2,ASCIITXT2_END,1,26
 	
 	jsr		INITJOYPADS	;	init controller
@@ -64,44 +62,20 @@ init:
 	
 @loop:
 	jsr		VSync
-	btst	#bitL,	JOYPADPRESS
-	bne.w	@L
-	btst	#bitR,	JOYPADPRESS
-	bne.w	@R
-	btst	#bitUp,	JOYPADPRESS
-	bne.w	@U
-	btst	#bitDn,	JOYPADPRESS
-	bne.w	@D
-	move.b	JOYPADPRESS,	d0
-	and.b	#btnABC,	d0
-	tst.b	d0
+	btst	#bitStart,	JOYPADPRESS
 	bne.w	@action
 	bra.w	@loop
 	
-@L
-	KDebug.WriteLine "Left!"
-	bra.w	@loop
-@R
-	KDebug.WriteLine "Right!"
-	bra.w	@loop
-@U
-	KDebug.WriteLine "Up!"
-	bra.w	@loop
-@D
-	KDebug.WriteLine "Down!"
-	bra.w	@loop
 @action
-	KDebug.WriteLine "Action!"
+	RaiseError	"Action"
 	bra.w	@loop
 	
-ASCIITXT1:	dc.b	'USE BLASTEM OR CLOWNMDEMU '
-	ASCIITXT1_END:
+ASCIITXT1:	dc.b	'MD-FMV'
+	ASCIITXT1_END:	even
 ASCIITXT2:	dc.b	'CREATED BY MDTRAVIS '
-	ASCIITXT2_END:
-ASCIITXT3:	dc.b	'IF A CONSOLE WINDOW APPEARS,'
-	ASCIITXT3_END:
-ASCIITXT4:	dc.b	'PROCEED WITH TESTING. '
-	ASCIITXT4_END:
+	ASCIITXT2_END:	even
+ASCIITXT3:	dc.b	'PRESS START'
+	ASCIITXT3_END:	even
 
 loadASCII2
 @loop
@@ -219,5 +193,27 @@ WordToBcd:
     move.w    d0,d1                    ; Get result
     move.w    (sp)+,d0                ; Restore d0
     rts
+	
+; vvv Code from MD-SONIC, disassembled by KatKuriN vvv
+DrawTileMap:
+	lea	VDPDATA,a6			; Prepare VDP data
+	move.l	#$800000,d4			; VDP command line delta
+
+.RowLoop:
+	move.l	d0,4(a6)			; Set VDP command
+	move.w	d1,d3				; Prepare row width
+
+.TileLoop:
+	move.w	(a1)+,(a6)			; Copy tile data
+	dbf	d3,.TileLoop			; Loop until row is drawn
+
+	add.l	d4,d0				; Next row
+	dbf	d2,.RowLoop			; Loop until tilemap is drawn
+	rts
+	
+			INCLUDE	"SRC/Kosinski Plus Decompression.asm"
+			INCLUDE	"SRC/DMA Queue.asm"
+	
+	include		"LOGO/LOGO.ASM"
 	
 	include		"ErrorHandler.asm"

@@ -6,11 +6,11 @@ LOGO_FrameNum	=	$FFE000
 LOGO_Parity		=	$FFE006
 ;-------------------------------------------------------
 LOGO:
-	move.b	#$80,v_snddriver_ram+f_pausemusic
-	move.w  #$E4,d0
-	jsr     PlayFMSound
+;	move.b	#$80,v_snddriver_ram+f_pausemusic
+;	move.w  #$E4,d0
+;	jsr     PlayFMSound
 
-	jsr		InitVDP
+;	jsr		InitVDP
 	move.w	#$8C70,VDPCTRL
 	move.w	#$9011,VDPCTRL
 	
@@ -23,26 +23,26 @@ LOGO:
 	
 	move.w	#$E0,	d1
 	lea		hscroll,	a0
-.clrRAM:
+@clrRAM:
 	move.l	d0,	(a0)+
-	dbf		d1,	.clrRAM
+	dbf		d1,	@clrRAM
 	
-	move.l	#$10,d1
-	lea		palette,a0
-.clrPal:
-	move.l	d0,(a0)+
-	dbf		d1,.clrPal
+;	move.l	#$10,d1
+;	lea		palette,a0
+;@clrPal:
+;	move.l	d0,(a0)+
+;	dbf		d1,@clrPal
 	
-	move.l	#$A0,d1
-	lea		sprites,a0
-.clrSpr:
-	move.l	d0,(a0)+
-	dbf		d1,.clrSpr
+;	move.l	#$A0,d1
+;	lea		sprites,a0
+;@clrSpr:
+;	move.l	d0,(a0)+
+;	dbf		d1,@clrSpr
 	
-	moveq	#0,d0				; Load palette into both palette buffers
-	jsr		LoadPalette
+;	moveq	#0,d0				; Load palette into both palette buffers
+;	jsr		LoadPalette
 	
-	move.b  #4,vintRoutine.w		; VSync
+;	move.b  #4,vintRoutine.w		; VSync
 	jsr		VSync
 	move.l	#LOGOTable,LOGO_FrameNum
 
@@ -50,20 +50,20 @@ LOGO:
 
 LOOPLOGO:
 ;ODDSET
-	move.b  #4,vintRoutine.w
+;	move.b  #4,vintRoutine.w
 	jsr		VSync
-	btst  	#bitStart,	p1CtrlData
-	bne.w	.skip
+;	btst  	#bitStart,	p1CtrlData
+;	bne.w	@skip
 	lea		LOGO_FrameNum,a2	;	grab the art & map
 	move.l	(a2),a2
 	move.l	(a2),a0
 	cmpi.w	#-1,a0		;	skip at end
-	beq.w	.scream		;	^
+	beq.w	@scream		;	^
 	lea		LOGO_VRAMDec,a1
 	jsr		KosPlusDec
 	addi.w	#4,	LOGO_FrameNum+2
 	tst.b	LOGO_Parity
-	bne.s	.even
+	bne.s	@even
 	LVLDMA	LOGO_VRAMArt,$0000,$1B20,VRAM	;	copy it to VRAM
 	lea     LOGO_VRAMDec,a1 ; Load mappings
 	move.l  #oddF,d0
@@ -73,7 +73,7 @@ LOOPLOGO:
 	move.w	#$0000,vscrollScreen
 	move.b	#1,LOGO_Parity
 	bra.w	LOOPLOGO
-.even:
+@even:
 	LVLDMA	LOGO_VRAMArt,$8000,$1B20,VRAM	;	copy it to VRAM
 	lea     LOGO_VRAMDec,a1 ; Load mappings
 	move.l  #evenF,d0
@@ -83,29 +83,30 @@ LOOPLOGO:
 	move.w	#$0100,vscrollScreen
 	move.b	#0,LOGO_Parity
 	bra.w	LOOPLOGO
-.scream:
-	move.w	#120,vintTimer
-	move.w  #$E1,d0
-	jsr     PlayFMSound
-.loop
-	move.b  #4,vintRoutine.w
-	jsr		VSync
-	btst  	#bitStart,	p1CtrlData
-	bne.w	.skip
-	tst.w	vintTimer
-	bne.s	.loop
-.skip:
-	move.w  #$E0,d0
-	jsr     PlayFMSound
-	moveq	#0,	d1
-	move.w	#$800,	d0
-	lea		$FF0000,	a0
-.clrRAM:
-	move.l	d1,	(a0)+
-	dbf		d0,	.clrRAM
-	jsr		FadeToBlack
-	jsr		SHC
-	move.b	#GM_TITLE,gameMode.w	;	set game mode to title screen
+@scream:
+	bra.s	@scream
+;	move.w	#120,vintTimer
+;	move.w  #$E1,d0
+;	jsr     PlayFMSound
+;@loop
+;;	move.b  #4,vintRoutine.w
+;	jsr		VSync
+;;	btst  	#bitStart,	p1CtrlData
+;	bne.w	@skip
+;	tst.w	vintTimer
+;	bne.s	@loop
+;@skip:
+;	move.w  #$E0,d0
+;	jsr     PlayFMSound
+;	moveq	#0,	d1
+;	move.w	#$800,	d0
+;	lea		$FF0000,	a0
+;@clrRAM:
+;	move.l	d1,	(a0)+
+;	dbf		d0,	@clrRAM
+;;	jsr		FadeToBlack
+;;	jsr		SHC
+;;	move.b	#GM_TITLE,gameMode.w	;	set game mode to title screen
 	rts
 	
 LOGOTable:

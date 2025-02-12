@@ -49,3 +49,7 @@ bitUp:		equ 0
 HEXADDR			=	$FF0000
 JOYPAD			=	$FF0010
 JOYPADPRESS		=	$FF0011
+
+hscroll					EQU $FFFFCC00
+vscrollScreen			EQU $FFFFF616
+dmaCmdLow               EQU $FFFFF640
