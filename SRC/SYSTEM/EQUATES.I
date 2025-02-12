@@ -27,6 +27,7 @@ IO_CT2_SMODE	=	$A10018
 IO_EXT_RX	    =	$A1001A
 IO_EXT_TX	    =	$A1001C
 IO_EXT_SMODE	=	$A1001E
+Z80BUS			=	$A11100
 
 btnStart:	equ %10000000 ; Start button	($80)
 btnA:		equ %01000000 ; A		($40)
@@ -46,10 +47,20 @@ bitL:		equ 2
 bitDn:		equ 1
 bitUp:		equ 0
 
-HEXADDR			=	$FF0000
-JOYPAD			=	$FF0010
-JOYPADPRESS		=	$FF0011
+HEXADDR			=	$FFC000
+JOYPAD			=	$FFC010
+JOYPADPRESS		=	$FFC011
 
 hscroll					EQU $FFFFCC00
+vdpReg01                EQU $FFFFF60C
+TIMER			=	$FFFFF614
 vscrollScreen			EQU $FFFFF616
+hscrollScreen           EQU $FFFFF61A
+vdpReg0A                EQU $FFFFF624
+VBLANKCMD		=	$FFFFF62A
 dmaCmdLow               EQU $FFFFF640
+VDPBUFFER2		=	$FFFFF644
+HBLANKFLAG		=	$FFFFF648
+palette                 EQU $FFFFFB00
+VBLANKCOUNTER	=	$FFFFFE0C
+HARDWAREVERSION	=	$FFFFFFF8

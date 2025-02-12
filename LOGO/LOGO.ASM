@@ -10,7 +10,7 @@ LOGO:
 ;	move.w  #$E4,d0
 ;	jsr     PlayFMSound
 
-;	jsr		InitVDP
+	jsr		InitVDP
 	move.w	#$8C70,VDPCTRL
 	move.w	#$9011,VDPCTRL
 	
@@ -41,8 +41,15 @@ LOGO:
 	
 ;	moveq	#0,d0				; Load palette into both palette buffers
 ;	jsr		LoadPalette
+
+	move.l	#(FRM_01-LOGOPAL)/4,d1
+	lea		palette,a0
+	lea		LOGOPAL,a1
+@loadPal:
+	move.l	(a1)+,(a0)+
+	dbf		d1,@loadPal
 	
-;	move.b  #4,vintRoutine.w		; VSync
+	move.b  #4,VBLANKCMD.w		; VSync
 	jsr		VSync
 	move.l	#LOGOTable,LOGO_FrameNum
 
@@ -50,7 +57,7 @@ LOGO:
 
 LOOPLOGO:
 ;ODDSET
-;	move.b  #4,vintRoutine.w
+	move.b  #4,VBLANKCMD.w
 	jsr		VSync
 ;	btst  	#bitStart,	p1CtrlData
 ;	bne.w	@skip
@@ -89,7 +96,7 @@ LOOPLOGO:
 ;	move.w  #$E1,d0
 ;	jsr     PlayFMSound
 ;@loop
-;;	move.b  #4,vintRoutine.w
+;;	move.b  #4,VBLANKCMD.w
 ;	jsr		VSync
 ;;	btst  	#bitStart,	p1CtrlData
 ;	bne.w	@skip

@@ -28,3 +28,13 @@ cmd	= (\type\\rwd\)|(((\addr)&$3FFF)<<16)|((\addr)/$4000)
 		\ins	cmd
 	endif
 	endm
+	
+align macro bound, value
+	local	pad
+pad	=	((\bound)-((*)%(\bound)))%(\bound)
+	if narg>1
+		dcb.b	pad,\value
+	else
+		dcb.b	pad,0
+	endif
+	endm

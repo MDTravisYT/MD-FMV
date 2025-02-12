@@ -31,8 +31,8 @@ init:
 	move.w	#$9100+%00000000,(VDPCTRL)      ;	WINDOW PLANE HORIZONTAL
 	move.w	#$9200+%00000000,(VDPCTRL)      ;	WINDOW PLANE VERTICAL
 	
-	move.l	#CRAMWRITE,(VDPCTRL)
-	move.w	#$E0,VDPDATA
+;	move.l	#CRAMWRITE,(VDPCTRL)
+	move.w	#$E0,palette
 	
 	lea		ascii,	a0
 	lea		VDPDATA,a1
@@ -61,13 +61,14 @@ init:
 	move.w	#$0444,VDPDATA
 	
 @loop:
+	MOVE.B	#1,	(VBLANKCMD).W
 	jsr		VSync
 	btst	#bitStart,	JOYPADPRESS
 	bne.w	@action
 	bra.w	@loop
 	
 @action
-	RaiseError	"Action"
+	jmp		LOGO
 	bra.w	@loop
 	
 ASCIITXT1:	dc.b	'MD-FMV'
@@ -133,17 +134,15 @@ DispHex
 	move.w	d0,	VDPDATA
 	rts
 	
-VSync:	;	code from ProjectFM
-    lea     ($C00004),a6
-@loop1:                             ; Wait until current VBlank is over
-    move.w    (a6),d7
-    btst.l    #3,d7
-    bne.s    @loop1
-@loop2:                             ; Wait until next VBlank starts
-    move.w    (a6),d7
-    btst.l    #3,d7
-    beq.s    @loop2
-    rts                             ; End of subroutine
+; vvv Code from MD-SONIC, disassembled by KatKuriN vvv
+VSync:
+	move	#$2300,sr			; Enable interrupts
+
+.Wait:
+	tst.b	VBLANKCMD.w			; Has the V-INT routine run?
+	bne.s	.Wait				; If not, wait for it to
+	
+	rts                          ; End of subroutine
 	
 	include		"SRC/SYSTEM/JOYPAD.S"
 	
@@ -213,7 +212,74 @@ DrawTileMap:
 	
 			INCLUDE	"SRC/Kosinski Plus Decompression.asm"
 			INCLUDE	"SRC/DMA Queue.asm"
-	
+; vvv Code from MD-SONIC, disassembled by KatKuriN vvv	
+InitVDP:
+	lea	VDPCTRL,a0			; Get VDP ports
+	lea	VDPDATA,a1
+
+	lea	VDPInitRegs,a2			; Prepare VDP registers
+	moveq	#$13-1,d7
+
+.InitRegs:
+	move.w	(a2)+,(a0)			; Set VDP register
+	dbf	d7,.InitRegs			; Loop until finished
+
+	move.w	VDPInitReg1,d0			; Set VDP register 1
+	move.w	d0,vdpReg01.w
+	move.w	#$8ADF,vdpReg0A.w		; Set H-INT counter
+
+	moveq	#0,d0				; Clear CRAM
+	move.l	#$C0000000,VDPCTRL
+	move.w	#$3F,d7
+
+.ClearCRAM:
+	move.w	d0,(a1)
+	dbf	d7,.ClearCRAM			; Loop until finished
+
+	clr.l	vscrollScreen.w			; Clear scroll values
+	clr.l	hscrollScreen.w
+
+	move.l	d1,-(sp)			; Clear VRAM via DMA fill
+	lea	VDPCTRL,a5
+	move.w	#$8F01,(a5)
+	move.l	#$94FF93FF,(a5)
+	move.w	#$9780,(a5)
+	move.l	#$40000080,(a5)
+	move.w	#0,VDPDATA
+
+.WaitVRAMClear:
+	move.w	(a5),d1
+	btst	#1,d1
+	bne.s	.WaitVRAMClear
+	move.w	#$8F02,(a5)
+	move.l	(sp)+,d1
+
+	rts
+
+; -------------------------------------------------------------------------
+
+VDPInitRegs:
+	dc.w	$8004				; H-INT disabled
+VDPInitReg1:
+	dc.w	$8174				; DMA and V-INT enabled, display disabled
+	dc.w	$8230				; Plane A at $C000
+	dc.w	$8328				; Window plane at $A000
+	dc.w	$8407				; Plane B at $E000
+	dc.w	$857C				; Sprite table at $F800
+	dc.w	$8600				; Unused
+	dc.w	$8720				; Background color at line 0 color 0
+	dc.w	$8800				; Unused
+	dc.w	$8900				; Unused
+	dc.w	$8ADF				; H-INT counter 0
+	dc.w	$8B03				; HScroll by screen, VScroll by screen
+	dc.w	$8C81				; H40 mode
+	dc.w	$8D3F				; HScroll at $FC00
+	dc.w	$8E00				; Unused
+	dc.w	$8F02				; Auto-increment by 2
+	dc.w	$9001				; Plane size 64x32
+	dc.w	$9100				; Window X at 0
+	dc.w	$9200				; Window Y at 0
+			
 	include		"LOGO/LOGO.ASM"
 	
 	include		"ErrorHandler.asm"
