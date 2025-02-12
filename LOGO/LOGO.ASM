@@ -1,5 +1,6 @@
-oddF	=	$42000003
-evenF	=	$52000003
+oddF	=	$40000003
+evenF	=	$50000003
+bgloc	=	$60000003
 LOGO_VRAMDec	=	$FF0000
 LOGO_VRAMArt	=	$FF08C0
 LOGO_FrameNum	=	$FFE000
@@ -13,6 +14,7 @@ LOGO:
 	jsr		InitVDP
 ;	move.w	#$8C70,VDPCTRL
 	move.w	#$9011,VDPCTRL
+	move.w	#$8700+%00010000,VDPCTRL
 	
 	move.l	#0,	d0
 	move.l	d0,	hscroll
@@ -64,6 +66,8 @@ LOOPLOGO:
 	lea		LOGO_FrameNum,a2	;	grab the art & map
 	move.l	(a2),a2
 	move.l	(a2),a0
+	cmpi.w	#-2,a0		;	trigger BG change
+	beq.w	@chgbg		;	^
 	cmpi.w	#-1,a0		;	skip at end
 	beq.w	@scream		;	^
 	lea		LOGO_VRAMDec,a1
@@ -115,8 +119,21 @@ LOOPLOGO:
 ;;	jsr		SHC
 ;;	move.b	#GM_TITLE,gameMode.w	;	set game mode to title screen
 	rts
+@chgbg:
+	lea		S1_BG,a0
+	lea		LOGO_VRAMDec,a1
+	jsr		KosPlusDec
+	addi.w	#4,	LOGO_FrameNum+2
+	LVLDMA	LOGO_VRAMArt,$2800,$5200,VRAM	;	copy it to VRAM
+	lea     LOGO_VRAMDec,a1 ; Load mappings
+	move.l  #bgloc,d0
+	move.w  #40-1,d1
+	move.w  #28-1,d2
+	jsr   DrawTileMap
+	bra.w	LOOPLOGO
 	
 LOGOTable:
+	DC.L	-2
 	DC.L	S1_FRM01,	S1_FRM02,	S1_FRM03,	S1_FRM04,	S1_FRM05
 	DC.L	S1_FRM06,	S1_FRM07,	S1_FRM08,	S1_FRM09,	S1_FRM10
 	DC.L	S1_FRM11,	S1_FRM12,	S1_FRM13,	S1_FRM14,	S1_FRM15
@@ -125,6 +142,8 @@ LOGOTable:
 	DC.L	-1
 LOGOPAL:	INCBIN	"LOGO/LOGOPAL.PAL"
 	LOGOPAL_END:
+S1_BG:		INCBIN	"LOGO/S1_BG.KOSP"
+	
 S1_FRM01:	INCBIN	"LOGO/S1_FRM01.KOSP"
 S1_FRM02:	INCBIN	"LOGO/S1_FRM02.KOSP"
 S1_FRM03:	INCBIN	"LOGO/S1_FRM03.KOSP"
