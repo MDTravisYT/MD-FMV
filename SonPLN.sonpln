@@ -1,0 +1,17 @@
+version=SCD
+[SCENE1\\S1_FRM01]
+tilecmp=Uncompressed
+tiles=LOGO/S1_FRM01.UNC
+mapcmp=Uncompressed
+mappings=LOGO/S1_FRM01.MAP
+palette=LOGO/LOGOPAL.PAL:0:0:16
+width=40
+height=28
+[SCENE1\\S1_FRM02]
+tilecmp=Uncompressed
+tiles=LOGO/S1_FRM02.UNC:0x8000
+mapcmp=Uncompressed
+mappings=LOGO/S1_FRM02.MAP
+palette=LOGO/LOGOPAL.PAL:0:0:16
+width=40
+height=28
