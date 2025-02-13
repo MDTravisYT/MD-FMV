@@ -4,7 +4,7 @@ tilecmp=Uncompressed
 tiles=LOGO/S1_BG.UNC:0x2800
 mapcmp=Uncompressed
 mappings=LOGO/S1_BG.MAP
-palette=LOGO/LOGOPAL.PAL:0:0:32
+palette=LOGO/LOGOPAL.PAL:0:0:64
 width=40
 height=28
 [SCENE1\\S1_FRM01]
